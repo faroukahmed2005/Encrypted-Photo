@@ -19,7 +19,7 @@ import wave
 from scipy.io import wavfile
 
 SAMPLE_RATE    = 44100
-PIXEL_DURATION = 0.001      # Color info
+PIXEL_DURATION = 0.02       # Color info
 BASE_FREQ_R    = 440.0      # A4 - nice musical note
 BASE_FREQ_G    = 880.0      # A5
 BASE_FREQ_B    = 1760.0     # A6
