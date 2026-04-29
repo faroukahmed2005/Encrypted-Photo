@@ -19,19 +19,19 @@ import wave
 from scipy.io import wavfile
 
 SAMPLE_RATE    = 44100
-PIXEL_DURATION = 0.001       # 10ms per pixel for better frequency resolution
+PIXEL_DURATION = 0.001      # Color info
 BASE_FREQ_R    = 440.0      # A4 - nice musical note
 BASE_FREQ_G    = 880.0      # A5
 BASE_FREQ_B    = 1760.0     # A6
 SYNC_FREQ      = 220.0      # A3 sync marker
 SYNC_DURATION  = 0.1        # 100ms per header tone
 END_DURATION   = 0.05       # 50ms end marker
-MAX_IMAGE_DIM  = 512         # 48x48 = 2304 pixels = ~23s audio
+MAX_IMAGE_DIM  = 512        # Max width/height to fit in 4 bytes (2 for width, 2 for height)
 
 # Pre-calculated header samples
 _sync_s = int(SAMPLE_RATE * SYNC_DURATION)
 _end_s  = int(SAMPLE_RATE * END_DURATION)
-HEADER_SAMPLES = _sync_s + 4 * _sync_s + _end_s  # = 5*4410 + 2205 = 24255
+HEADER_SAMPLES = _sync_s + 4 * _sync_s + _end_s 
 SAMPLES_PER_PIXEL = int(SAMPLE_RATE * PIXEL_DURATION)
 
 
@@ -74,7 +74,6 @@ def encode_image_to_audio(image_bytes: bytes) -> tuple:
     # 3. End-of-header marker (half-amplitude sync)
     segments.append(_make_tone(SYNC_FREQ, 0.5, _end_s))
 
-    # --- Pixel data ---
     spp = SAMPLES_PER_PIXEL
     t   = np.arange(spp) / SAMPLE_RATE
     sin_r = np.sin(2 * np.pi * BASE_FREQ_R * t)
@@ -86,7 +85,6 @@ def encode_image_to_audio(image_bytes: bytes) -> tuple:
             r_amp = float(pixel[0]) / 255.0
             g_amp = float(pixel[1]) / 255.0
             b_amp = float(pixel[2]) / 255.0
-            # Mix and normalize by 3 channels
             seg = (r_amp * sin_r + g_amp * sin_g + b_amp * sin_b) / 3.0
             segments.append(seg)
 
@@ -149,7 +147,6 @@ def decode_audio_to_image(wav_bytes: bytes) -> tuple:
     if n_ch > 1:
         audio = audio[::n_ch]
 
-    # Resample if needed
     if fr != SAMPLE_RATE:
         from scipy.signal import resample_poly
         from math import gcd
@@ -157,7 +154,7 @@ def decode_audio_to_image(wav_bytes: bytes) -> tuple:
         audio = resample_poly(audio, SAMPLE_RATE // g, fr // g)
 
     # --- Decode header dimensions ---
-    offset = _sync_s  # skip sync tone
+    offset = _sync_s 
     w_high_amp = _decode_header_amp(audio, offset,              150.0)
     w_low_amp  = _decode_header_amp(audio, offset + _sync_s,    250.0)
     h_high_amp = _decode_header_amp(audio, offset + 2*_sync_s,  350.0)
@@ -192,7 +189,6 @@ def decode_audio_to_image(wav_bytes: bytes) -> tuple:
     img_arr = np.array(pixels, dtype=np.uint8).reshape(height, width, 3)
     img     = Image.fromarray(img_arr, 'RGB')
 
-    # Scale up for display
     scale   = max(1, 256 // max(width, height))
     img_big = img.resize((width * scale, height * scale), Image.NEAREST)
 
