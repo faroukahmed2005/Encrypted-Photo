@@ -16,19 +16,17 @@ import numpy as np
 from PIL import Image
 import io
 import wave
-import os
-import tempfile
-import subprocess
+from scipy.io import wavfile
 
 SAMPLE_RATE    = 44100
-PIXEL_DURATION = 0.01       # 10ms per pixel for better frequency resolution
+PIXEL_DURATION = 0.001       # 10ms per pixel for better frequency resolution
 BASE_FREQ_R    = 440.0      # A4 - nice musical note
 BASE_FREQ_G    = 880.0      # A5
 BASE_FREQ_B    = 1760.0     # A6
 SYNC_FREQ      = 220.0      # A3 sync marker
 SYNC_DURATION  = 0.1        # 100ms per header tone
 END_DURATION   = 0.05       # 50ms end marker
-MAX_IMAGE_DIM  = 48         # 48x48 = 2304 pixels = ~23s audio
+MAX_IMAGE_DIM  = 512         # 48x48 = 2304 pixels = ~23s audio
 
 # Pre-calculated header samples
 _sync_s = int(SAMPLE_RATE * SYNC_DURATION)
@@ -70,7 +68,7 @@ def encode_image_to_audio(image_bytes: bytes) -> tuple:
     h_low  = height & 0xFF
 
     for val, freq in [(w_high, 150.0), (w_low, 250.0), (h_high, 350.0), (h_low, 450.0)]:
-        amp = (val / 255.0) if val > 0 else 0.002
+        amp = val / 255.0
         segments.append(_make_tone(freq, amp, _sync_s))
 
     # 3. End-of-header marker (half-amplitude sync)
@@ -94,18 +92,10 @@ def encode_image_to_audio(image_bytes: bytes) -> tuple:
 
     audio = np.concatenate(segments)
 
-    # Normalize
-    mx = np.max(np.abs(audio))
-    if mx > 0:
-        audio = audio / mx * 0.95
-    audio_i16 = (audio * 32767).astype(np.int16)
+    audio_i16 = np.int16(audio * 32767)
 
     wav_buf = io.BytesIO()
-    with wave.open(wav_buf, 'wb') as wf:
-        wf.setnchannels(1)
-        wf.setsampwidth(2)
-        wf.setframerate(SAMPLE_RATE)
-        wf.writeframes(audio_i16.tobytes())
+    wavfile.write(wav_buf, SAMPLE_RATE, audio_i16)
 
     metadata = {
         'width': width,
@@ -210,52 +200,3 @@ def decode_audio_to_image(wav_bytes: bytes) -> tuple:
     img_big.save(out, format='PNG')
 
     return out.getvalue(), {'width': width, 'height': height, 'decoded_pixels': len(pixels)}
-
-
-def wav_to_mp3(wav_bytes: bytes) -> bytes:
-    try:
-        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as f:
-            f.write(wav_bytes)
-            wav_path = f.name
-        mp3_path = wav_path.replace('.wav', '.mp3')
-        r = subprocess.run(
-            ['ffmpeg', '-y', '-i', wav_path, '-codec:a', 'libmp3lame', '-qscale:a', '2', mp3_path],
-            capture_output=True, timeout=60
-        )
-        if r.returncode == 0 and os.path.exists(mp3_path):
-            with open(mp3_path, 'rb') as f:
-                data = f.read()
-            os.unlink(wav_path); os.unlink(mp3_path)
-            return data
-    except Exception:
-        pass
-    finally:
-        try: os.unlink(wav_path)
-        except: pass
-    return wav_bytes
-
-
-def mp3_to_wav(audio_bytes: bytes, filename: str = '') -> bytes:
-    if audio_bytes[:4] == b'RIFF':
-        return audio_bytes
-    try:
-        suffix = '.mp3' if filename.lower().endswith('.mp3') else '.audio'
-        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as f:
-            f.write(audio_bytes)
-            in_path = f.name
-        wav_path = in_path + '.wav'
-        r = subprocess.run(
-            ['ffmpeg', '-y', '-i', in_path, '-ar', str(SAMPLE_RATE), '-ac', '1', wav_path],
-            capture_output=True, timeout=60
-        )
-        if r.returncode == 0 and os.path.exists(wav_path):
-            with open(wav_path, 'rb') as f:
-                data = f.read()
-            os.unlink(in_path); os.unlink(wav_path)
-            return data
-    except Exception:
-        pass
-    finally:
-        try: os.unlink(in_path)
-        except: pass
-    return audio_bytes

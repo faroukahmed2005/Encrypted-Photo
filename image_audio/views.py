@@ -6,7 +6,6 @@ from django.views.decorators.http import require_http_methods
 from django.shortcuts import render
 from .dsp_core import (
     encode_image_to_audio, decode_audio_to_image,
-    wav_to_mp3, mp3_to_wav,
     HEADER_SAMPLES, SAMPLES_PER_PIXEL, SAMPLE_RATE,
     BASE_FREQ_R, BASE_FREQ_G, BASE_FREQ_B,
     _sync_s, _decode_header_amp,
@@ -29,12 +28,8 @@ def encode_image(request):
         return JsonResponse({'error': 'Image too large (max 10MB)'}, status=400)
     try:
         wav_bytes, metadata = encode_image_to_audio(image_file.read())
-        audio_bytes = wav_to_mp3(wav_bytes)
-        is_mp3 = audio_bytes[:3] == b'ID3' or audio_bytes[:2] == b'\xff\xfb'
-        ct  = 'audio/mpeg' if is_mp3 else 'audio/wav'
-        ext = 'mp3' if is_mp3 else 'wav'
-        response = HttpResponse(audio_bytes, content_type=ct)
-        response['Content-Disposition'] = f'attachment; filename="dsp_image_{int(time.time())}.{ext}"'
+        response = HttpResponse(wav_bytes, content_type='audio/wav')
+        response['Content-Disposition'] = f'attachment; filename="dsp_image_{int(time.time())}.wav"'
         response['X-Image-Width']    = str(metadata['width'])
         response['X-Image-Height']   = str(metadata['height'])
         response['X-Total-Pixels']   = str(metadata['total_pixels'])
@@ -54,7 +49,7 @@ def decode_audio(request):
     if audio_file.size > 100 * 1024 * 1024:
         return JsonResponse({'error': 'Audio too large (max 100MB)'}, status=400)
     try:
-        wav_bytes = mp3_to_wav(audio_file.read(), audio_file.name)
+        wav_bytes = audio_file.read()
         png_bytes, metadata = decode_audio_to_image(wav_bytes)
         response = HttpResponse(png_bytes, content_type='image/png')
         response['Content-Disposition'] = 'inline; filename="decoded_image.png"'
@@ -72,10 +67,7 @@ def decode_audio_stream(request):
     if 'audio' not in request.FILES:
         return JsonResponse({'error': 'No audio file provided'}, status=400)
     audio_file = request.FILES['audio']
-    try:
-        wav_bytes = mp3_to_wav(audio_file.read(), audio_file.name)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+    wav_bytes = audio_file.read()
 
     def pixel_generator(wav_bytes):
         import wave, io as _io
