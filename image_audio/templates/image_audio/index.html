@@ -1,102 +1,148 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DSP Image ↔ Audio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1117;
-    --bg2: #1a1d2e;
-    --bg3: #242840;
-    --accent: #6c63ff;
-    --accent2: #ff6584;
-    --green: #43e97b;
-    --text: #e8eaf6;
-    --text2: #9499b7;
-    --border: #2e3354;
-    --radius: 12px;
+    --bg-color: #0b0f19;
+    --card-bg: rgba(22, 27, 40, 0.6);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --accent-primary: #3b82f6;
+    --accent-secondary: #8b5cf6;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --success: #10b981;
+    --error: #ef4444;
+    --radius: 16px;
+    --font: 'Inter', system-ui, sans-serif;
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
+  
   body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', system-ui, sans-serif;
+    background-color: var(--bg-color);
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.15), transparent 25%),
+      radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15), transparent 25%);
+    background-attachment: fixed;
+    color: var(--text-main);
+    font-family: var(--font);
     min-height: 100vh;
-    padding: 24px;
+    padding: 30px 20px;
+    line-height: 1.5;
   }
+
   header {
     text-align: center;
-    padding: 32px 0 24px;
+    padding: 40px 0 30px;
+    animation: fadeInDown 0.8s ease-out;
   }
+
   header h1 {
-    font-size: 2rem;
+    font-size: 2.75rem;
     font-weight: 700;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #60a5fa, #c084fc);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    margin-bottom: 12px;
   }
+
   header p {
-    color: var(--text2);
-    margin-top: 8px;
-    font-size: 0.95rem;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    max-width: 600px;
+    margin: 0 auto;
   }
+
+  /* Tabs */
   .tabs {
     display: flex;
-    gap: 8px;
+    gap: 12px;
     justify-content: center;
-    margin-bottom: 28px;
+    margin-bottom: 40px;
+    animation: fadeInUp 0.8s ease-out;
   }
+  
   .tab-btn {
-    padding: 10px 28px;
-    border: 2px solid var(--border);
-    background: var(--bg2);
-    color: var(--text2);
+    padding: 12px 32px;
+    border: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(10px);
+    color: var(--text-muted);
     border-radius: 99px;
     cursor: pointer;
-    font-size: 0.95rem;
-    transition: all 0.2s;
-  }
-  .tab-btn.active {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: #fff;
-  }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-
-  .card {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px;
-    max-width: 760px;
-    margin: 0 auto 24px;
-  }
-  .card h2 {
-    font-size: 1.1rem;
-    margin-bottom: 18px;
+    font-size: 1rem;
+    font-weight: 500;
+    font-family: var(--font);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
-  .card h2 .icon { font-size: 1.4rem; }
+
+  .tab-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-main);
+    transform: translateY(-2px);
+  }
+
+  .tab-btn.active {
+    border-color: rgba(139, 92, 246, 0.5);
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);
+  }
+
+  .tab-content { display: none; animation: fadeIn 0.5s ease-out; }
+  .tab-content.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--card-bg);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 36px;
+    max-width: 800px;
+    margin: 0 auto 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .card h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #fff;
+  }
+  
+  .card h2 .icon { font-size: 1.5rem; }
 
   /* Drop zone */
   .dropzone {
-    border: 2px dashed var(--border);
+    border: 2px dashed rgba(148, 163, 184, 0.3);
     border-radius: var(--radius);
-    padding: 40px 20px;
+    padding: 48px 24px;
     text-align: center;
     cursor: pointer;
-    transition: all 0.25s;
+    transition: all 0.3s ease;
     position: relative;
+    background: rgba(0, 0, 0, 0.2);
   }
+
   .dropzone:hover, .dropzone.drag-over {
-    border-color: var(--accent);
-    background: rgba(108, 99, 255, 0.06);
+    border-color: var(--accent-primary);
+    background: rgba(59, 130, 246, 0.08);
+    transform: scale(1.01);
   }
+
   .dropzone input[type=file] {
     position: absolute;
     inset: 0;
@@ -105,177 +151,297 @@
     width: 100%;
     height: 100%;
   }
-  .dropzone .dz-icon { font-size: 3rem; margin-bottom: 12px; }
-  .dropzone p { color: var(--text2); font-size: 0.9rem; margin-top: 6px; }
+
+  .dropzone .dz-icon { 
+    font-size: 3.5rem; 
+    margin-bottom: 16px;
+    opacity: 0.9;
+    transition: transform 0.3s ease;
+  }
+  
+  .dropzone:hover .dz-icon {
+    transform: translateY(-5px);
+  }
+
+  .dropzone strong {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-main);
+    margin-bottom: 8px;
+  }
+
+  .dropzone p { 
+    color: var(--text-muted); 
+    font-size: 0.9rem; 
+  }
 
   /* Preview */
   .preview-area {
-    margin-top: 20px;
+    margin-top: 28px;
     display: none;
+    animation: fadeIn 0.4s ease;
   }
   .preview-area.show { display: block; }
+  
   .preview-row {
     display: flex;
-    gap: 16px;
-    align-items: flex-start;
+    gap: 24px;
+    align-items: stretch;
     flex-wrap: wrap;
   }
+
   .preview-img-wrap {
     flex: 0 0 auto;
     text-align: center;
+    background: rgba(0,0,0,0.2);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
   }
+
   .preview-img-wrap img {
     max-width: 200px;
     max-height: 200px;
     border-radius: 8px;
-    border: 1px solid var(--border);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     image-rendering: pixelated;
   }
-  .preview-img-wrap p { color: var(--text2); font-size: 0.8rem; margin-top: 6px; }
 
+  .preview-img-wrap p { 
+    color: var(--text-muted); 
+    font-size: 0.85rem; 
+    margin-top: 12px;
+    font-weight: 500;
+  }
+
+  /* Data Table / Meta Box */
   .meta-box {
     flex: 1;
-    background: var(--bg3);
-    border-radius: 8px;
-    padding: 14px 18px;
-    min-width: 200px;
+    background: rgba(0, 0, 0, 0.25);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 20px;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
+
   .meta-row {
     display: flex;
     justify-content: space-between;
-    padding: 5px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 0.88rem;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.95rem;
   }
-  .meta-row:last-child { border-bottom: none; }
-  .meta-row .label { color: var(--text2); }
-  .meta-row .value { color: var(--green); font-weight: 600; font-family: monospace; }
 
-  /* Button */
+  .meta-row:last-child { border-bottom: none; }
+  
+  .meta-row .label { color: var(--text-muted); }
+  
+  .meta-row .value { 
+    color: var(--success); 
+    font-weight: 600; 
+    font-family: 'JetBrains Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+
+  /* Buttons */
+  .btn-group {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 28px;
+  }
+
   .btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 12px 28px;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px 32px;
     border: none;
     border-radius: 99px;
     cursor: pointer;
-    font-size: 0.95rem;
+    font-size: 1rem;
     font-weight: 600;
-    transition: all 0.2s;
-    margin-top: 18px;
+    font-family: var(--font);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+
   .btn-primary {
-    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     color: #fff;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
   }
-  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+
+  .btn-primary:hover:not(:disabled) { 
+    box-shadow: 0 6px 25px rgba(59, 130, 246, 0.5);
+    transform: translateY(-2px); 
+  }
+
   .btn-primary:disabled {
-    opacity: 0.5;
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.3);
+    box-shadow: none;
     cursor: not-allowed;
     transform: none;
   }
-  .btn-download {
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text);
-  }
-  .btn-download:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* Progress */
-  .progress-wrap { margin-top: 18px; display: none; }
-  .progress-wrap.show { display: block; }
+  .btn-download {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    color: var(--text-main);
+  }
+
+  .btn-download:hover { 
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2); 
+    transform: translateY(-2px);
+  }
+
+  /* Progress Bar */
+  .progress-wrap { 
+    margin-top: 28px; 
+    display: none; 
+    background: rgba(0,0,0,0.2);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+  }
+  .progress-wrap.show { display: block; animation: fadeIn 0.4s ease; }
+  
   .progress-label {
     display: flex;
     justify-content: space-between;
-    font-size: 0.85rem;
-    color: var(--text2);
-    margin-bottom: 6px;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    font-weight: 500;
+    margin-bottom: 12px;
   }
+  
   .progress-bar {
-    height: 6px;
-    background: var(--bg3);
+    height: 8px;
+    background: rgba(255, 255, 255, 0.05);
     border-radius: 99px;
     overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
   }
+  
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+    background-size: 200% 200%;
     border-radius: 99px;
-    transition: width 0.1s;
+    transition: width 0.3s ease;
     width: 0%;
+    animation: gradientFlow 2s ease infinite;
   }
 
-  /* Canvas area (live drawing) */
-  .canvas-wrap {
-    margin-top: 20px;
-    text-align: center;
+  /* Results Area */
+  .result-img, .canvas-wrap {
+    margin-top: 28px;
     display: none;
+    animation: fadeIn 0.5s ease;
   }
-  .canvas-wrap.show { display: block; }
-  .canvas-wrap canvas {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    image-rendering: pixelated;
+  .result-img.show, .canvas-wrap.show { display: block; }
+  
+  .result-img img, .canvas-wrap canvas {
     max-width: 100%;
-  }
-  .canvas-wrap p { color: var(--text2); font-size: 0.85rem; margin-top: 8px; }
-
-  /* Result */
-  .result-img {
-    margin-top: 18px;
-    text-align: center;
-    display: none;
-  }
-  .result-img.show { display: block; }
-  .result-img img {
-    max-width: 100%;
-    border-radius: 8px;
-    border: 1px solid var(--border);
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     image-rendering: pixelated;
+    background: rgba(0,0,0,0.2);
+    padding: 8px;
   }
 
-  /* Toast */
-  .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(100px);
-    background: var(--bg3);
-    border: 1px solid var(--border);
+  .canvas-wrap p { 
+    color: var(--text-muted); 
+    font-size: 0.9rem; 
+    margin-top: 16px; 
+    font-weight: 500;
+  }
+
+  /* Custom Audio Player */
+  audio {
+    width: 100%;
+    height: 48px;
+    margin: 20px 0;
     border-radius: 99px;
-    padding: 10px 22px;
-    font-size: 0.9rem;
-    transition: transform 0.3s;
-    z-index: 999;
+    outline: none;
   }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast.error { border-color: var(--accent2); color: var(--accent2); }
-  .toast.success { border-color: var(--green); color: var(--green); }
+  audio::-webkit-media-controls-panel {
+    background-color: rgba(255, 255, 255, 0.9);
+  }
 
-  /* Waveform visualizer */
+  /* Waveform */
   .waveform-canvas {
     width: 100%;
-    height: 80px;
-    margin-top: 14px;
-    border-radius: 8px;
-    background: var(--bg3);
+    height: 100px;
+    margin-top: 20px;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--card-border);
   }
 
-  /* Spinner */
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(150px);
+    background: rgba(22, 27, 40, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--card-border);
+    border-radius: 99px;
+    padding: 14px 28px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { border-left: 4px solid var(--error); color: #fff; }
+  .toast.success { border-left: 4px solid var(--success); color: #fff; }
+
+  /* Spinner Animation */
   @keyframes spin { to { transform: rotate(360deg); } }
   .spinner {
     display: inline-block;
-    width: 18px; height: 18px;
+    width: 20px; height: 20px;
     border: 2px solid rgba(255,255,255,0.3);
     border-top-color: #fff;
     border-radius: 50%;
-    animation: spin 0.7s linear infinite;
+    animation: spin 0.8s linear infinite;
   }
 
-  @media (max-width: 600px) {
-    header h1 { font-size: 1.5rem; }
-    .card { padding: 18px; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes fadeInUp { 
+    from { opacity: 0; transform: translateY(20px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
+  @keyframes fadeInDown { 
+    from { opacity: 0; transform: translateY(-20px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
+  @keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  @media (max-width: 640px) {
+    header h1 { font-size: 2rem; }
+    .card { padding: 24px; }
+    .preview-row { flex-direction: column; align-items: center; }
+    .meta-box { width: 100%; }
   }
 </style>
 </head>
@@ -283,69 +449,69 @@
 
 <header>
   <h1>🎵 Image ↔ Audio DSP</h1>
-  <p>حوّل صورتك لملف صوت، وارجع منه نفس الصورة باستخدام الترددات</p>
+  <p>Convert your image to an audio file, and decode it back using frequencies</p>
 </header>
 
 <div class="tabs">
-  <button class="tab-btn active" onclick="switchTab('encode')">📸 صورة → صوت</button>
-  <button class="tab-btn" onclick="switchTab('decode')">🎧 صوت → صورة</button>
+  <button class="tab-btn active" onclick="switchTab('encode')">📸 Image → Audio</button>
+  <button class="tab-btn" onclick="switchTab('decode')">🎧 Audio → Image</button>
 </div>
 
 <!-- ========== ENCODE TAB ========== -->
 <div id="tab-encode" class="tab-content active">
   <div class="card">
-    <h2><span class="icon">📸</span> ارفع صورة للتحويل</h2>
+    <h2><span class="icon">📸</span> Upload Image to Encode</h2>
 
     <div class="dropzone" id="encode-dropzone">
       <input type="file" id="encode-file-input" accept="image/*">
       <div class="dz-icon">🖼️</div>
-      <strong>اسحب صورة هنا أو اضغط للاختيار</strong>
-      <p>PNG, JPG, GIF, BMP, WEBP — حجم أقصى 10MB</p>
+      <strong>Drag & drop an image here or click to select</strong>
+      <p>PNG, JPG, GIF, BMP, WEBP — Max size 10MB</p>
     </div>
 
     <div class="preview-area" id="encode-preview">
       <div class="preview-row">
         <div class="preview-img-wrap">
           <img id="encode-thumb" src="" alt="preview">
-          <p>الصورة الأصلية</p>
+          <p>Original Image</p>
         </div>
         <div class="meta-box">
-          <div class="meta-row"><span class="label">الاسم</span><span class="value" id="meta-name">-</span></div>
-          <div class="meta-row"><span class="label">الحجم الأصلي</span><span class="value" id="meta-size">-</span></div>
-          <div class="meta-row"><span class="label">الأبعاد بعد التحجيم</span><span class="value" id="meta-dims">-</span></div>
-          <div class="meta-row"><span class="label">عدد الـ pixels</span><span class="value" id="meta-pixels">-</span></div>
-          <div class="meta-row"><span class="label">مدة الصوت المتوقعة</span><span class="value" id="meta-duration">-</span></div>
+          <div class="meta-row"><span class="label">Name</span><span class="value" id="meta-name">-</span></div>
+          <div class="meta-row"><span class="label">Original Size</span><span class="value" id="meta-size">-</span></div>
+          <div class="meta-row"><span class="label">Dimensions (Scaled)</span><span class="value" id="meta-dims">-</span></div>
+          <div class="meta-row"><span class="label">Total Pixels</span><span class="value" id="meta-pixels">-</span></div>
+          <div class="meta-row"><span class="label">Estimated Audio Duration</span><span class="value" id="meta-duration">-</span></div>
         </div>
       </div>
     </div>
 
-    <div style="display:flex; gap:12px; flex-wrap:wrap">
+    <div class="btn-group">
       <button class="btn btn-primary" id="encode-btn" onclick="startEncode()" disabled>
         <span id="encode-btn-icon">🎵</span>
-        <span id="encode-btn-text">حوّل لصوت</span>
+        <span id="encode-btn-text">Encode to Audio</span>
       </button>
     </div>
 
     <div class="progress-wrap" id="encode-progress">
       <div class="progress-label">
-        <span id="encode-progress-text">جاري التحويل...</span>
+        <span id="encode-progress-text">Encoding...</span>
         <span id="encode-progress-pct">0%</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="encode-fill"></div></div>
     </div>
 
-    <div id="encode-result" class="result-img" style="display:none; margin-top:18px">
-      <div class="meta-box" style="margin-bottom:14px">
-        <div class="meta-row"><span class="label">حجم ملف الصوت</span><span class="value" id="audio-size">-</span></div>
-        <div class="meta-row"><span class="label">مدة الصوت الفعلية</span><span class="value" id="audio-duration">-</span></div>
-        <div class="meta-row"><span class="label">أبعاد الصورة المحولة</span><span class="value" id="audio-img-dims">-</span></div>
+    <div id="encode-result" class="result-img" style="display:none;">
+      <div class="meta-box" style="margin-bottom: 24px;">
+        <div class="meta-row"><span class="label">Audio File Size</span><span class="value" id="audio-size">-</span></div>
+        <div class="meta-row"><span class="label">Actual Audio Duration</span><span class="value" id="audio-duration">-</span></div>
+        <div class="meta-row"><span class="label">Encoded Image Dimensions</span><span class="value" id="audio-img-dims">-</span></div>
       </div>
       <canvas class="waveform-canvas" id="waveform-canvas"></canvas>
       <div style="text-align:center">
-        <audio id="audio-player" controls style="margin-top:14px; width:100%; max-width:400px"></audio>
+        <audio id="audio-player" controls></audio>
         <br>
         <button class="btn btn-download" id="download-btn" onclick="downloadAudio()">
-          ⬇️ تحميل ملف الصوت
+          ⬇️ Download Audio File
         </button>
       </div>
     </div>
@@ -355,33 +521,33 @@
 <!-- ========== DECODE TAB ========== -->
 <div id="tab-decode" class="tab-content">
   <div class="card">
-    <h2><span class="icon">🎧</span> ارفع ملف الصوت لاسترجاع الصورة</h2>
+    <h2><span class="icon">🎧</span> Upload Audio to Decode</h2>
 
     <div class="dropzone" id="decode-dropzone">
       <input type="file" id="decode-file-input" accept="audio/*,.wav,.mp3">
       <div class="dz-icon">🎵</div>
-      <strong>اسحب ملف الصوت هنا أو اضغط للاختيار</strong>
-      <p>MP3, WAV — حجم أقصى 100MB</p>
+      <strong>Drag & drop an audio file here or click to select</strong>
+      <p>MP3, WAV — Max size 100MB</p>
     </div>
 
     <div class="preview-area" id="decode-preview">
       <div class="meta-box">
-        <div class="meta-row"><span class="label">الملف</span><span class="value" id="decode-meta-name">-</span></div>
-        <div class="meta-row"><span class="label">الحجم</span><span class="value" id="decode-meta-size">-</span></div>
+        <div class="meta-row"><span class="label">File</span><span class="value" id="decode-meta-name">-</span></div>
+        <div class="meta-row"><span class="label">Size</span><span class="value" id="decode-meta-size">-</span></div>
       </div>
-      <audio id="decode-audio-player" controls style="margin-top:14px; width:100%"></audio>
+      <audio id="decode-audio-player" controls></audio>
     </div>
 
-    <div style="display:flex; gap:12px; flex-wrap:wrap">
+    <div class="btn-group">
       <button class="btn btn-primary" id="decode-btn" onclick="startDecode()" disabled>
         <span id="decode-btn-icon">🖼️</span>
-        <span id="decode-btn-text">ارسم الصورة</span>
+        <span id="decode-btn-text">Draw Image</span>
       </button>
     </div>
 
     <div class="progress-wrap" id="decode-progress">
       <div class="progress-label">
-        <span id="decode-progress-text">جاري تحليل الترددات...</span>
+        <span id="decode-progress-text">Analyzing frequencies...</span>
         <span id="decode-progress-pct">0%</span>
       </div>
       <div class="progress-bar"><div class="progress-fill" id="decode-fill"></div></div>
@@ -389,20 +555,22 @@
 
     <!-- Live canvas drawing -->
     <div class="canvas-wrap" id="decode-canvas-wrap">
-      <canvas id="decode-canvas"></canvas>
-      <p id="decode-canvas-label">جاري رسم الصورة pixel by pixel...</p>
+      <div style="text-align: center; margin-bottom: 16px;">
+          <canvas id="decode-canvas"></canvas>
+      </div>
+      <p id="decode-canvas-label">Drawing image pixel by pixel...</p>
     </div>
 
     <!-- Final result -->
     <div class="result-img" id="decode-result">
-      <div class="meta-box" style="margin-bottom:14px">
-        <div class="meta-row"><span class="label">الأبعاد المستخرجة</span><span class="value" id="decode-dims">-</span></div>
-        <div class="meta-row"><span class="label">إجمالي الـ pixels</span><span class="value" id="decode-pixels">-</span></div>
+      <div class="meta-box" style="margin-bottom: 24px;">
+        <div class="meta-row"><span class="label">Extracted Dimensions</span><span class="value" id="decode-dims">-</span></div>
+        <div class="meta-row"><span class="label">Total Pixels</span><span class="value" id="decode-pixels">-</span></div>
       </div>
       <div style="text-align:center">
         <img id="decode-result-img" src="" alt="decoded">
         <br>
-        <button class="btn btn-download" onclick="downloadDecoded()">⬇️ تحميل الصورة</button>
+        <button class="btn btn-download" style="margin-top: 16px;" onclick="downloadDecoded()">⬇️ Download Image</button>
       </div>
     </div>
   </div>
@@ -464,7 +632,7 @@ encodeDZ.addEventListener('drop', e => {
   encodeDZ.classList.remove('drag-over');
   const f = e.dataTransfer.files[0];
   if (f && f.type.startsWith('image/')) handleEncodeFile(f);
-  else showToast('الملف مش صورة!', 'error');
+  else showToast('File is not an image!', 'error');
 });
 
 function handleEncodeFile(file) {
@@ -484,7 +652,7 @@ function handleEncodeFile(file) {
       document.getElementById('meta-dims').textContent = `${w} × ${h}`;
       document.getElementById('meta-pixels').textContent = (w*h).toLocaleString();
       const dur = (w*h*0.005 + 0.7).toFixed(1);
-      document.getElementById('meta-duration').textContent = `~${dur} ثانية`;
+      document.getElementById('meta-duration').textContent = `~${dur} seconds`;
     };
     img.src = e.target.result;
     document.getElementById('encode-btn').disabled = false;
@@ -506,18 +674,18 @@ async function startEncode() {
 
   btn.disabled = true;
   document.getElementById('encode-btn-icon').innerHTML = '<span class="spinner"></span>';
-  document.getElementById('encode-btn-text').textContent = 'جاري التحويل...';
+  document.getElementById('encode-btn-text').textContent = 'Encoding...';
   prog.classList.add('show');
   fill.style.width = '10%';
   pct.textContent = '10%';
-  txt.textContent = 'جاري رفع الصورة...';
+  txt.textContent = 'Uploading image...';
 
   try {
     const fd = new FormData();
     fd.append('image', encodeFile);
 
     fill.style.width = '30%'; pct.textContent = '30%';
-    txt.textContent = 'جاري تحليل الصورة وتوليد الترددات...';
+    txt.textContent = 'Analyzing image and generating frequencies...';
 
     const res = await fetch('/api/encode/', { method: 'POST', body: fd });
 
@@ -525,7 +693,7 @@ async function startEncode() {
 
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.error || 'فشل التحويل');
+      throw new Error(err.error || 'Encoding failed');
     }
 
     audioBlob = await res.blob();
@@ -537,11 +705,11 @@ async function startEncode() {
     const npx   = res.headers.get('X-Total-Pixels') || '?';
 
     fill.style.width = '100%'; pct.textContent = '100%';
-    txt.textContent = '✅ تم التحويل!';
+    txt.textContent = '✅ Encoding complete!';
 
     document.getElementById('audio-size').textContent = fmtSize(audioBlob.size);
-    document.getElementById('audio-duration').textContent = `${parseFloat(dur).toFixed(1)} ثانية`;
-    document.getElementById('audio-img-dims').textContent = `${w} × ${h} (${parseInt(npx).toLocaleString()} pixel)`;
+    document.getElementById('audio-duration').textContent = `${parseFloat(dur).toFixed(1)} seconds`;
+    document.getElementById('audio-img-dims').textContent = `${w} × ${h} (${parseInt(npx).toLocaleString()} pixels)`;
 
     const audioUrl = URL.createObjectURL(audioBlob);
     document.getElementById('audio-player').src = audioUrl;
@@ -549,15 +717,15 @@ async function startEncode() {
     drawWaveform(audioBlob);
 
     document.getElementById('encode-result').style.display = 'block';
-    showToast('تم التحويل بنجاح! 🎵', 'success');
+    showToast('Successfully encoded! 🎵', 'success');
 
   } catch(e) {
-    showToast('خطأ: ' + e.message, 'error');
-    txt.textContent = '❌ فشل التحويل';
+    showToast('Error: ' + e.message, 'error');
+    txt.textContent = '❌ Encoding failed';
   } finally {
     btn.disabled = false;
     document.getElementById('encode-btn-icon').textContent = '🎵';
-    document.getElementById('encode-btn-text').textContent = 'حوّل لصوت';
+    document.getElementById('encode-btn-text').textContent = 'Encode to Audio';
   }
 }
 
@@ -577,7 +745,7 @@ async function drawWaveform(blob) {
   const canvas = document.getElementById('waveform-canvas');
   const ctx    = canvas.getContext('2d');
   canvas.width  = canvas.offsetWidth || 600;
-  canvas.height = 80;
+  canvas.height = 100;
 
   try {
     const arrayBuf = await blob.arrayBuffer();
@@ -587,10 +755,9 @@ async function drawWaveform(blob) {
 
     const w = canvas.width, h = canvas.height;
     const step = Math.ceil(data.length / w);
-    ctx.fillStyle = '#1a1d2e';
-    ctx.fillRect(0, 0, w, h);
-    ctx.strokeStyle = '#6c63ff';
-    ctx.lineWidth = 1;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
 
     for (let i = 0; i < w; i++) {
@@ -606,8 +773,7 @@ async function drawWaveform(blob) {
     ctx.stroke();
   } catch(e) {
     // Fallback: draw dummy waveform
-    ctx.fillStyle = '#1a1d2e';
-    ctx.fillRect(0, 0, canvas.width, 80);
+    ctx.clearRect(0, 0, canvas.width, 100);
   }
 }
 
@@ -662,10 +828,10 @@ async function startDecode() {
 
   btn.disabled = true;
   document.getElementById('decode-btn-icon').innerHTML = '<span class="spinner"></span>';
-  document.getElementById('decode-btn-text').textContent = 'جاري التحليل...';
+  document.getElementById('decode-btn-text').textContent = 'Analyzing...';
   prog.classList.add('show');
   fill.style.width = '5%'; pct.textContent = '5%';
-  txt.textContent = 'جاري رفع الملف...';
+  txt.textContent = 'Uploading file...';
   resultDiv.style.display = 'none';
 
   try {
@@ -675,12 +841,12 @@ async function startDecode() {
     const res = await fetch('/api/decode/stream/', { method: 'POST', body: fd });
 
     if (!res.ok) {
-      const err = await res.json().catch(() => ({error: 'فشل'}));
-      throw new Error(err.error || 'فشل التحليل');
+      const err = await res.json().catch(() => ({error: 'Failed'}));
+      throw new Error(err.error || 'Analysis failed');
     }
 
     fill.style.width = '10%'; pct.textContent = '10%';
-    txt.textContent = 'جاري قراءة البيانات...';
+    txt.textContent = 'Reading data...';
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -723,7 +889,7 @@ async function startDecode() {
           // Store pixel data for final export
           decodedImageData = new Array(totalPixels);
 
-          txt.textContent = `الأبعاد: ${decodeWidth}×${decodeHeight} — جاري الرسم...`;
+          txt.textContent = `Dimensions: ${decodeWidth}×${decodeHeight} — Drawing...`;
           fill.style.width = '15%'; pct.textContent = '15%';
         }
 
@@ -743,32 +909,32 @@ async function startDecode() {
           const progress = 15 + Math.round((drawnPixels / totalPixels) * 80);
           fill.style.width = progress + '%';
           pct.textContent  = progress + '%';
-          txt.textContent  = `رسم ${drawnPixels.toLocaleString()} / ${totalPixels.toLocaleString()} pixel`;
+          txt.textContent  = `Drawing ${drawnPixels.toLocaleString()} / ${totalPixels.toLocaleString()} pixels`;
         }
 
         if (event.type === 'done') {
           fill.style.width = '100%'; pct.textContent = '100%';
-          txt.textContent = '✅ اكتمل الرسم!';
+          txt.textContent = '✅ Drawing complete!';
 
           // Export canvas to image
           const imgDataUrl = decodeCanvas.toDataURL('image/png');
           document.getElementById('decode-result-img').src = imgDataUrl;
           document.getElementById('decode-dims').textContent = `${decodeWidth} × ${decodeHeight}`;
           document.getElementById('decode-pixels').textContent = totalPixels.toLocaleString();
-          document.getElementById('decode-canvas-label').textContent = '✅ اكتملت الصورة';
+          document.getElementById('decode-canvas-label').textContent = '✅ Image complete';
           resultDiv.style.display = 'block';
-          showToast('تمت استعادة الصورة! 🖼️', 'success');
+          showToast('Image restored successfully! 🖼️', 'success');
         }
       }
     }
 
   } catch(e) {
-    showToast('خطأ: ' + e.message, 'error');
-    txt.textContent = '❌ فشل التحليل';
+    showToast('Error: ' + e.message, 'error');
+    txt.textContent = '❌ Analysis failed';
   } finally {
     btn.disabled = false;
     document.getElementById('decode-btn-icon').textContent = '🖼️';
-    document.getElementById('decode-btn-text').textContent = 'ارسم الصورة';
+    document.getElementById('decode-btn-text').textContent = 'Draw Image';
   }
 }
 

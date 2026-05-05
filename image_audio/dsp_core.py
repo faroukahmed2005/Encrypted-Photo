@@ -1,19 +1,3 @@
-"""
-DSP Core - Image to Audio and Audio to Image
-============================================
-Encoding strategy (Stereo / Dual-Pixel):
-  - Image resized to max MAX_IMAGE_DIM
-  - Header: sync tone + 4 dimension tones (W high, W low, H high, H low) + end marker
-      → identical waveform written to BOTH Left and Right channels
-  - Each pixel pair (Pixel1, Pixel2) is encoded into one audio frame:
-      Left  channel  ← Pixel1 (R,G,B) → 3 mixed sine tones
-      Right channel  ← Pixel2 (R,G,B) → 3 mixed sine tones
-  - Each pixel segment = PIXEL_DURATION seconds (audio duration halved vs mono)
-  - Amplitude is detected via Goertzel-like DFT at decoding
-  - If the total pixel count is odd the last Left slot has a real pixel and
-    the last Right slot is padded with silence (black pixel).
-"""
-
 import numpy as np
 from PIL import Image
 import io
@@ -62,9 +46,6 @@ def _pixel_wave(pixel, sin_r: np.ndarray, sin_g: np.ndarray, sin_b: np.ndarray) 
 def _build_header_mono() -> np.ndarray:
     """Build the mono header waveform (sync + 4 dim tones + end marker)."""
     parts = [_make_tone(SYNC_FREQ, 1.0, _sync_s)]
-    # Dimension values are embedded at encode time; return a zero-filled
-    # placeholder that callers replace with the real values.
-    # This helper is not called directly — see encode_image_to_audio.
     return np.concatenate(parts)
 
 
