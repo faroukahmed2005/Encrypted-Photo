@@ -1,7 +1,7 @@
-import numpy as np
-from PIL import Image
 import io
 import wave
+import numpy as np
+from PIL import Image
 from scipy.io import wavfile
 
 SAMPLE_RATE    = 22050
@@ -30,11 +30,12 @@ def resize_image(img: Image.Image, max_dim: int = MAX_IMAGE_DIM) -> Image.Image:
     return img.resize((new_w, new_h), Image.LANCZOS)
 
 
+# making sin wave for each frequency.
 def _make_tone(freq: float, amplitude: float, n_samples: int) -> np.ndarray:
     t = np.arange(n_samples) / SAMPLE_RATE
     return amplitude * np.sin(2 * np.pi * freq * t)
 
-
+# making 3 sin wave for each color channel and combine them into one wave
 def _pixel_wave(pixel, sin_r: np.ndarray, sin_g: np.ndarray, sin_b: np.ndarray) -> np.ndarray:
     """Return the FDM wave for a single (R,G,B) pixel tuple."""
     r_amp = float(pixel[0]) / 255.0
@@ -42,24 +43,21 @@ def _pixel_wave(pixel, sin_r: np.ndarray, sin_g: np.ndarray, sin_b: np.ndarray) 
     b_amp = float(pixel[2]) / 255.0
     return (r_amp * sin_r + g_amp * sin_g + b_amp * sin_b) / 3.0
 
-
+# old version of header
 def _build_header_mono() -> np.ndarray:
     """Build the mono header waveform (sync + 4 dim tones + end marker)."""
     parts = [_make_tone(SYNC_FREQ, 1.0, _sync_s)]
     return np.concatenate(parts)
 
-
+# making header & encode 2 pixels into 1 frame & returning stereo wave.
 def encode_image_to_audio(image_bytes: bytes) -> tuple:
     img = Image.open(io.BytesIO(image_bytes))
     img = resize_image(img)
     width, height = img.size
-    pixels = np.array(img)          # shape (H, W, 3)
-    flat   = pixels.reshape(-1, 3)  # shape (total_pixels, 3)
+    pixels = np.array(img)          
+    flat   = pixels.reshape(-1, 3)  
     total_pixels = len(flat)
 
-    # ------------------------------------------------------------------ #
-    #  Build mono header (identical for both channels)                     #
-    # ------------------------------------------------------------------ #
     hdr_parts = [_make_tone(SYNC_FREQ, 1.0, _sync_s)]
 
     w_high = (width  >> 8) & 0xFF
@@ -67,16 +65,12 @@ def encode_image_to_audio(image_bytes: bytes) -> tuple:
     h_high = (height >> 8) & 0xFF
     h_low  =  height       & 0xFF
 
-    for val, freq in [(w_high, 150.0), (w_low, 250.0),
-                      (h_high, 350.0), (h_low, 450.0)]:
+    for val, freq in [(w_high, 150.0), (w_low, 250.0),(h_high, 350.0), (h_low, 450.0)]:
         hdr_parts.append(_make_tone(freq, val / 255.0, _sync_s))
 
     hdr_parts.append(_make_tone(SYNC_FREQ, 0.5, _end_s))
-    header_mono = np.concatenate(hdr_parts)          # length = HEADER_SAMPLES
+    header_mono = np.concatenate(hdr_parts)          
 
-    # ------------------------------------------------------------------ #
-    #  Pre-compute carrier sinusoids                                       #
-    # ------------------------------------------------------------------ #
     spp = SAMPLES_PER_PIXEL
     t   = np.arange(spp) / SAMPLE_RATE
     sin_r = np.sin(2 * np.pi * BASE_FREQ_R * t)
@@ -84,11 +78,8 @@ def encode_image_to_audio(image_bytes: bytes) -> tuple:
     sin_b = np.sin(2 * np.pi * BASE_FREQ_B * t)
     silence = np.zeros(spp)
 
-    # ------------------------------------------------------------------ #
-    #  Iterate in chunks of 2 → one audio frame per pair                  #
-    # ------------------------------------------------------------------ #
     left_segs  = [header_mono]
-    right_segs = [header_mono.copy()]   # identical copy for right channel
+    right_segs = [header_mono.copy()]   
 
     for i in range(0, total_pixels, 2):
         px1 = flat[i]
@@ -98,22 +89,17 @@ def encode_image_to_audio(image_bytes: bytes) -> tuple:
             px2 = flat[i + 1]
             right_segs.append(_pixel_wave(px2, sin_r, sin_g, sin_b))
         else:
-            # Odd pixel count — pad right with silence
             right_segs.append(silence)
 
     left_audio  = np.concatenate(left_segs)
     right_audio = np.concatenate(right_segs)
 
-    # ------------------------------------------------------------------ #
-    #  Stack into (N, 2) stereo array and convert to 16-bit PCM           #
-    # ------------------------------------------------------------------ #
-    stereo = np.column_stack((left_audio, right_audio))  # shape (N, 2)
+    stereo = np.column_stack((left_audio, right_audio))  
     stereo_i16 = np.int16(np.clip(stereo, -1.0, 1.0) * 32767)
 
     wav_buf = io.BytesIO()
     wavfile.write(wav_buf, SAMPLE_RATE, stereo_i16)
 
-    # Number of audio frames = header frames + ceil(total_pixels / 2) pixel frames
     n_frames = len(left_audio)
     metadata = {
         'width':             width,
@@ -125,9 +111,9 @@ def encode_image_to_audio(image_bytes: bytes) -> tuple:
 
 
 # ------------------------------------------------------------------ #
-#  Goertzel-style amplitude estimators                                 #
-# ------------------------------------------------------------------ #
 
+
+# decode 441 samples of a single tone, returning an RGB tuple.
 def _decode_amp(channel: np.ndarray, start: int, freq: float) -> float:
     """Estimate amplitude of `freq` in channel[start : start+SAMPLES_PER_PIXEL]."""
     spp = SAMPLES_PER_PIXEL
@@ -141,7 +127,7 @@ def _decode_amp(channel: np.ndarray, start: int, freq: float) -> float:
     b = 2.0 * np.dot(seg, c) / spp
     return float(np.sqrt(a * a + b * b))
 
-
+# decode 2205 samples of a single tone, returning an amplitude.
 def _decode_header_amp(channel: np.ndarray, start: int, freq: float) -> float:
     """Estimate amplitude of `freq` over a sync-duration segment."""
     seg = channel[start: start + _sync_s]
@@ -154,7 +140,7 @@ def _decode_header_amp(channel: np.ndarray, start: int, freq: float) -> float:
     b = 2.0 * np.dot(seg, c) / _sync_s
     return float(np.sqrt(a * a + b * b))
 
-
+# loading WAV file, making  left/right channels for stereo.
 def _load_stereo_channels(wav_bytes: bytes):
     """
     Load a WAV file and return (left, right, sample_rate).
@@ -175,15 +161,12 @@ def _load_stereo_channels(wav_bytes: bytes):
         pcm = np.frombuffer(raw, dtype=np.uint8).astype(np.float32) / 127.5 - 1.0
 
     if n_ch >= 2:
-        # De-interleave: even samples → left, odd samples → right
         left  = pcm[0::2]
         right = pcm[1::2]
     else:
-        # Mono legacy file — duplicate channel
         left  = pcm
         right = pcm.copy()
 
-    # Resample if needed
     if fr != SAMPLE_RATE:
         from scipy.signal import resample_poly
         from math import gcd
@@ -195,7 +178,7 @@ def _load_stereo_channels(wav_bytes: bytes):
 
     return left, right
 
-
+# reading header , decoding pixels, reconstructing image, returning PNG.
 def decode_audio_to_image(wav_bytes: bytes) -> tuple:
     left, right = _load_stereo_channels(wav_bytes)
 
